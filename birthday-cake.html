@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Make a Wish! 🎂</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 100vw;
+      height: 100vh;
+      background: linear-gradient(135deg, #e8c3f5 0%, #ffcfd2 50%, #fde2e4 100%);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Poppins', sans-serif;
+      position: relative;
+    }
+
+    /* Confetti Canvas */
+    #confetti {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      position: relative;
+      z-index: 10;
+    }
+
+    /* Back Button */
+    .back-button {
+      position: fixed;
+      top: 30px;
+      left: 30px;
+      background: rgba(255, 255, 255, 0.15);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: white;
+      padding: 10px 22px;
+      border-radius: 50px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.3s ease;
+      z-index: 1000;
+      text-decoration: none;
+    }
+
+    .back-button:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: translateX(-5px);
+    }
+
+    .back-icon {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.5;
+    }
+
+    /* SVG Cake Wrapper */
+    .cake-wrapper {
+      position: relative;
+      width: 320px;
+      height: 320px;
+      margin-bottom: 30px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-end;
+    }
+
+    #cake-svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+      transform: scale(0);
+      animation: popCake 1.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.5s forwards;
+    }
+
+    @keyframes popCake {
+      to {
+        transform: scale(1);
+      }
+    }
+
+    /* HTML overlay for Candle and Flame (placed at top center of cake) */
+    .candle-container {
+      position: absolute;
+      top: 48px; /* Positioned right on top of our new 3-tier SVG cake */
+      left: 50%;
+      transform: translateX(-50%) translateY(-200px);
+      width: 8px;
+      height: 38px;
+      background: #ffffff;
+      border-radius: 3px;
+      z-index: 50;
+      opacity: 0;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    /* Candle strip details */
+    .candle-container::after, .candle-container::before {
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 2px;
+      background: rgba(255, 0, 0, 0.45);
+    }
+    .candle-container::after { top: 25%; }
+    .candle-container::before { top: 55%; }
+
+    /* Animated entry of candle once cake is built (around 6s) */
+    .candle-container.appear {
+      animation: candleIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+
+    @keyframes candleIn {
+      to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+      }
+    }
+
+    /* Flicker flame */
+    .fuego {
+      position: absolute;
+      top: -14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 8px;
+      height: 16px;
+      border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+      background: radial-gradient(ellipse at 50% 80%, #fff176, #ffd740 40%, #ff6f00 80%);
+      box-shadow: 0 0 10px #ffd740, 0 0 20px #ff6f00, 0 0 30px rgba(255,120,0,0.4);
+      transform-origin: bottom center;
+      animation: flicker 0.15s ease-in-out infinite alternate;
+      display: none; /* Initially hidden until candle lands */
+    }
+
+    .candle-container.appear .fuego {
+      display: block;
+      animation-delay: 0.6s;
+    }
+
+    .candle-container.blown-out .fuego {
+      display: none !important;
+    }
+
+    @keyframes flicker {
+      0% { transform: translateX(-50%) rotate(-3deg) scaleX(0.9); }
+      100% { transform: translateX(-50%) rotate(3deg) scaleX(1.1) scaleY(1.05); }
+    }
+
+    /* Glassmorphic Floating Instruction Card */
+    .text-instruction {
+      background: rgba(255, 255, 255, 0.45);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      border-radius: 20px;
+      padding: 20px 24px;
+      text-align: center;
+      margin-top: 25px;
+      max-width: 340px;
+      width: 90%;
+      box-shadow: 0 12px 35px rgba(106, 64, 135, 0.08);
+      animation: floatCard 4s ease-in-out infinite alternate;
+      z-index: 10;
+    }
+
+    @keyframes floatCard {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(-8px); }
+    }
+
+    .text-instruction h1 {
+      font-size: 1.35rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #6a4087, #b24caf);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 6px;
+      letter-spacing: -0.5px;
+    }
+
+    .text-instruction p {
+      font-size: 0.82rem;
+      color: #5b3577;
+      font-weight: 600;
+      line-height: 1.5;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.5s ease;
+    }
+
+    .text-instruction.active p {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* Action button at bottom */
+    .btn-bottom {
+      margin-top: 30px;
+      padding: 12px 28px;
+      font-size: 0.85rem;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #ffd6ec, #ffe5f1);
+      color: #c96b98;
+      border: none;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+      cursor: pointer;
+      font-weight: 700;
+      font-family: 'Poppins', sans-serif;
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      opacity: 0;
+      transform: translateY(20px);
+      pointer-events: none;
+    }
+
+    .btn-bottom.show {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    .btn-bottom:hover {
+      transform: scale(1.06) translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+      background: white;
+    }
+
+    @media (max-width: 480px) {
+      .back-button {
+        top: 20px;
+        left: 20px;
+        padding: 8px 18px;
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confetti"></canvas>
+
+  <!-- Tombol Back -->
+  <a class="back-button" href="name.html">
+    <svg class="back-icon" viewBox="0 0 24 24">
+      <path d="M19 12H5M12 19l-7-7 7-7" />
+    </svg>
+    <span>Back</span>
+  </a>
+
+  <div class="container">
+    
+    <div class="cake-wrapper">
+          <!-- SVG Cake Tiered -->
+      <svg id="cake-svg" viewBox="0 0 300 300" xml:space="preserve">
+        <!-- Cake Stand -->
+        <ellipse cx="150" cy="265" rx="120" ry="12" fill="#e2c6db" />
+        <rect x="140" y="265" width="20" height="15" fill="#cfabcb" />
+        <ellipse cx="150" cy="280" rx="55" ry="8" fill="#cfabcb" />
+
+        <!-- Bottom Tier (Layer 1) -->
+        <path d="M 50 205 A 100 15 0 0 0 250 205 L 250 255 A 100 15 0 0 1 50 255 Z" fill="#e8c3f5" />
+        <ellipse cx="150" cy="205" rx="100" ry="15" fill="#f3d8f8" />
+        
+        <!-- Drips on Bottom Tier -->
+        <path d="M 50 205 Q 70 220 90 205 Q 110 220 130 205 Q 150 220 170 205 Q 190 220 210 205 Q 230 220 250 205 L 250 215 Q 230 230 210 215 Q 190 230 170 215 Q 150 230 130 215 Q 110 230 90 215 Q 70 230 50 215 Z" fill="#ffffff" opacity="0.65" />
+
+        <!-- Middle Tier (Layer 2) -->
+        <path d="M 75 142 A 75 12 0 0 0 225 142 L 225 205 A 75 12 0 0 1 75 205 Z" fill="#ffcfd2" />
+        <ellipse cx="150" cy="142" rx="75" ry="12" fill="#ffe5e7" />
+        
+        <!-- Drips on Middle Tier -->
+        <path d="M 75 142 Q 95 154 115 142 Q 135 154 155 142 Q 175 154 195 142 Q 215 154 225 142 L 225 150 Q 215 162 195 150 Q 175 162 155 150 Q 135 162 115 150 Q 95 162 75 150 Z" fill="#ffffff" opacity="0.65" />
+
+        <!-- Top Tier (Layer 3) -->
+        <path d="M 100 85 A 50 8 0 0 0 200 85 L 200 142 A 50 8 0 0 1 100 142 Z" fill="#fde2e4" />
+        <ellipse cx="150" cy="85" rx="50" ry="8" fill="#fff3f4" />
+        
+        <!-- Cream Drips on Top Tier -->
+        <path d="M 100 85 Q 115 95 130 85 Q 145 95 160 85 Q 175 95 190 85 Q 200 85 200 85 L 200 95 Q 190 105 175 95 Q 160 105 145 95 Q 130 105 115 95 Q 100 105 100 95 Z" fill="#ffffff" />
+        
+        <!-- Sprinkles & Details -->
+        <circle cx="90" cy="235" r="3" fill="#ffcfd2" />
+        <circle cx="130" cy="245" r="3" fill="#fff" />
+        <circle cx="170" cy="240" r="3" fill="#e8c3f5" />
+        <circle cx="210" cy="247" r="3" fill="#ffcfd2" />
+        
+        <circle cx="110" cy="172" r="2.5" fill="#e8c3f5" />
+        <circle cx="150" cy="177" r="2.5" fill="#fff" />
+        <circle cx="190" cy="170" r="2.5" fill="#fde2e4" />
+      </svg>
+      
+      <!-- Candle and Flame container -->
+      <div class="candle-container" id="candle">
+        <div class="fuego"></div>
+      </div>
+      
+    </div>
+
+    <div class="text-instruction" id="instructions">
+      <h1>Happy Birthday Cery!</h1>
+      <p id="instruction-p">Kue ulang tahunmu sedang dibuat... Mohon tunggu sebentar ya ✨</p>
+    </div>
+
+    <button class="btn-bottom" id="btnNext" onclick="window.location.href='utama.html'">
+      Click untuk melihat sesuatu ➔
+    </button>
+  </div>
+
+  <script>
+    // Synthesizer Web Audio API
+    class SoundSynth {
+      constructor() {
+        this.audioCtx = null;
+      }
+      init() {
+        if (!this.audioCtx) {
+          this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+      playTone(freq, duration, type = 'sine') {
+        this.init();
+        if (this.audioCtx.state === 'suspended') {
+          this.audioCtx.resume();
+        }
+        const osc = this.audioCtx.createOscillator();
+        const gain = this.audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, this.audioCtx.currentTime);
+        gain.gain.setValueAtTime(0.12, this.audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(this.audioCtx.destination);
+        osc.start();
+        osc.stop(this.audioCtx.currentTime + duration);
+      }
+      playBlowSuccess() {
+        // Play retro fan-fare success sound
+        const t = 0.12;
+        this.playTone(523.25, t, 'square'); // C5
+        setTimeout(() => this.playTone(659.25, t, 'square'), t * 1000); // E5
+        setTimeout(() => this.playTone(783.99, t, 'square'), t * 2000); // G5
+        setTimeout(() => this.playTone(1046.50, t * 2, 'square'), t * 3000); // C6
+      }
+    }
+
+    const synth = new SoundSynth();
+
+    // Sound Clapping Hands with fallback
+    const applause = new Audio("https://assets.mixkit.co/active_storage/sfx/2019/clapping-hands-sound-effect-2019-preview.mp3");
+    applause.volume = 0.6;
+
+    function playSuccessClapping() {
+      // Play retro tone fanfare
+      synth.playBlowSuccess();
+      
+      // Play clapping hands mp3
+      applause.play().catch(e => {
+        console.log("Primary clapping sound blocked or failed, trying backup:", e);
+        const backupApplause = new Audio("https://www.soundjay.com/human/sounds/applause-01.mp3");
+        backupApplause.volume = 0.6;
+        backupApplause.play().catch(err => console.log("All audio links blocked", err));
+      });
+    }
+
+    // Trigger candle and instructions appear after cake builds (around 6s)
+    const candle = document.getElementById('candle');
+    const instructionText = document.getElementById('instructions');
+    const instructionP = document.getElementById('instruction-p');
+    const btnNext = document.getElementById('btnNext');
+
+    setTimeout(() => {
+      candle.classList.add('appear');
+      instructionText.classList.add('active');
+      instructionP.textContent = "Tiup lilinnya! (Ketuk lilin untuk meniup api 🕯️)";
+    }, 2200);
+
+    // Candle blow click interaction
+    let isBlown = false;
+    candle.addEventListener('click', () => {
+      if (isBlown) return;
+      isBlown = true;
+      candle.classList.add('blown-out');
+      playSuccessClapping();
+      instructionP.textContent = "Hore! Harapanmu sudah terkirim! Tiupan lilinmu sangat keren! 🎉";
+      
+      // Start confetti burst
+      startConfetti();
+      
+      // Show action button
+      setTimeout(() => {
+        btnNext.classList.add('show');
+      }, 1000);
+    });
+
+    // Confetti Animation Logic
+    function startConfetti() {
+      const canvas = document.getElementById('confetti');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      const pieces = [];
+      const colors = ['#ffd6ec', '#ffe5f1', '#e3f6f5', '#fff3b0', '#e5ccff', '#c77da5', '#926ca8'];
+
+      for (let i = 0; i < 180; i++) {
+        pieces.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          speed: Math.random() * 3 + 2,
+          rotation: Math.random() * 360,
+          rotationSpeed: Math.random() * 8 - 4
+        });
+      }
+
+      function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        pieces.forEach(p => {
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.size / 2, -p.size / 2, p.size, p.size);
+          ctx.restore();
+        });
+      }
+
+      function update() {
+        pieces.forEach(p => {
+          p.y += p.speed;
+          p.rotation += p.rotationSpeed;
+          if (p.y > canvas.height) {
+            p.y = -10;
+            p.x = Math.random() * canvas.width;
+          }
+        });
+      }
+
+      function loop() {
+        draw();
+        update();
+        requestAnimationFrame(loop);
+      }
+
+      loop();
+    }
+  </script>
+</body>
+</html>

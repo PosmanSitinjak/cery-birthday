@@ -1,0 +1,7 @@
+# Exclude zip and local temp files
+ultah_cery.zip
+.gemini/
+.git/
+.vscode/
+Thumbs.db
+Desktop.ini

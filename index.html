@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Birthday Access Gate 🔒</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+      position: fixed;
+      background: linear-gradient(135deg, #e8c3f5 0%, #ffcfd2 50%, #fde2e4 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Ambient animated bubbles */
+    .bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.35);
+      animation: float 12s infinite ease-in-out;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0) translateX(0) scale(1); opacity: 0.4; }
+      50% { transform: translateY(-80px) translateX(30px) scale(1.15); opacity: 0.8; }
+    }
+
+    #pw-gate {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      padding: 20px;
+    }
+
+    .login-card {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 35px 25px;
+      border-radius: 30px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.5);
+      width: 100%;
+      max-width: 380px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      animation: cardFadeIn 1s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+    }
+
+    @keyframes cardFadeIn {
+      from { opacity: 0; transform: translateY(30px) scale(0.95); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .login-card h2 {
+      margin-bottom: 8px;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #8c5b9f;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .login-card p {
+      color: #8c5b9f;
+      font-size: 0.85rem;
+      line-height: 1.5;
+      margin-bottom: 20px;
+      padding: 0 10px;
+    }
+
+    #pin-display {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin: 10px 0 25px 0;
+    }
+
+    .dot {
+      width: 15px;
+      height: 15px;
+      border-radius: 50%;
+      background: rgba(178, 102, 255, 0.15);
+      border: 2px solid rgba(178, 102, 255, 0.4);
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .dot.active {
+      background: #8c5b9f;
+      border-color: #8c5b9f;
+      transform: scale(1.2);
+      box-shadow: 0 0 8px rgba(199, 125, 165, 0.5);
+    }
+
+    #pin-keypad {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 10px;
+      justify-items: center;
+      width: 100%;
+      max-width: 280px;
+    }
+
+    .pin-btn {
+      background: rgba(255, 255, 255, 0.65);
+      color: #8c5b9f;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      width: 68px;
+      height: 68px;
+      font-size: 1.4rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.03);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
+    }
+
+    .pin-btn:active, .pin-btn.clicked {
+      background: #ffcfd2 !important;
+      color: #8c5b9f !important;
+      transform: scale(0.9);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    }
+
+    @media (min-width: 1025px) {
+      .pin-btn:hover {
+        background: #f7edff;
+        transform: scale(1.06);
+        border-color: #e0c9ff;
+      }
+    }
+
+    #pw-msg {
+      height: 22px;
+      color: #e57373;
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-top: 10px;
+      transition: all 0.3s ease;
+    }
+
+    @media (max-width: 380px) {
+      .login-card {
+        padding: 25px 15px;
+      }
+      .pin-btn {
+        width: 58px;
+        height: 58px;
+        font-size: 1.25rem;
+      }
+      #pin-keypad {
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Animated Background Deco -->
+  <div class="bubble" style="width: 70px; height: 70px; top: 15%; left: 12%; animation-delay: 0s;"></div>
+  <div class="bubble" style="width: 50px; height: 50px; bottom: 15%; right: 10%; animation-delay: 2s; animation-duration: 10s;"></div>
+  <div class="bubble" style="width: 80px; height: 80px; top: 60%; left: 8%; animation-delay: 4s; animation-duration: 14s;"></div>
+  <div class="bubble" style="width: 40px; height: 40px; top: 25%; right: 18%; animation-delay: 1s; animation-duration: 9s;"></div>
+
+  <div id="pw-gate">
+    <div class="login-card">
+      <h2>Birthday Access</h2>
+      <p>Masukkan PIN untuk membuka kejutan spesial. <br>
+      <span style="font-size: 0.78rem; font-style: italic; color: #a87ebb;">(Petunjuk: Tanggal lahir Cery DDMMYY)</span></p>
+
+      <div id="pin-display">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+
+      <div id="pin-keypad">
+        <button class="pin-btn" data-value="1">1</button>
+        <button class="pin-btn" data-value="2">2</button>
+        <button class="pin-btn" data-value="3">3</button>
+        <button class="pin-btn" data-value="4">4</button>
+        <button class="pin-btn" data-value="5">5</button>
+        <button class="pin-btn" data-value="6">6</button>
+        <button class="pin-btn" data-value="7">7</button>
+        <button class="pin-btn" data-value="8">8</button>
+        <button class="pin-btn" data-value="9">9</button>
+        <button class="pin-btn" data-value="back">←</button>
+        <button class="pin-btn" data-value="0">0</button>
+        <button class="pin-btn" data-value="check">✔</button>
+      </div>
+
+      <p id="pw-msg"></p>
+    </div>
+  </div>
+
+  <script>
+    const PASSWORD = "020708"; // Tanggal lahir Cery: 02 Juli 2008
+    let inputPIN = "";
+    const dots = document.querySelectorAll(".dot");
+    const msg = document.getElementById("pw-msg");
+
+    function updateDots() {
+      dots.forEach((dot, i) => {
+        if (i < inputPIN.length) {
+          dot.classList.add("active");
+        } else {
+          dot.classList.remove("active");
+        }
+      });
+    }
+
+    function checkPIN() {
+      if (inputPIN === PASSWORD) {
+        msg.style.color = "#81c784";
+        msg.textContent = "Akses dibuka! Membuka kado... 🎉";
+        setTimeout(() => {
+          window.location.href = "name.html";
+        }, 800);
+      } else {
+        msg.style.color = "#e57373";
+        msg.textContent = "PIN salah! Cobalah kembali 😜";
+        // Shake animation effect
+        const card = document.querySelector(".login-card");
+        card.style.animation = "shake 0.3s ease";
+        setTimeout(() => {
+          card.style.animation = "";
+        }, 300);
+        inputPIN = "";
+        updateDots();
+      }
+    }
+
+    // Add CSS shake keyframes dynamically
+    const styleSheet = document.createElement("style");
+    styleSheet.innerText = `
+      @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-8px); }
+        75% { transform: translateX(8px); }
+      }
+    `;
+    document.head.appendChild(styleSheet);
+
+    function handleInput(val) {
+      if (val === "back") {
+        inputPIN = inputPIN.slice(0, -1);
+        updateDots();
+        msg.textContent = "";
+      } else if (val === "check") {
+        if (inputPIN.length === 6) {
+          checkPIN();
+        } else {
+          msg.style.color = "#e57373";
+          msg.textContent = "PIN harus 6 digit! 😮";
+        }
+      } else {
+        if (inputPIN.length < 6) {
+          inputPIN += val;
+          updateDots();
+          msg.textContent = "";
+          
+          if (inputPIN.length === 6) {
+            setTimeout(() => checkPIN(), 250);
+          }
+        }
+      }
+    }
+
+    document.querySelectorAll(".pin-btn").forEach(btn => {
+      // Handle touch and click events correctly
+      btn.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+        btn.classList.add("clicked");
+        handleInput(btn.getAttribute("data-value"));
+      });
+
+      btn.addEventListener("touchend", (e) => {
+        e.preventDefault();
+        setTimeout(() => btn.classList.remove("clicked"), 150);
+      });
+
+      btn.addEventListener("mousedown", (e) => {
+        btn.classList.add("clicked");
+      });
+
+      btn.addEventListener("mouseup", (e) => {
+        setTimeout(() => btn.classList.remove("clicked"), 150);
+      });
+
+      btn.addEventListener("click", (e) => {
+        // Prevent trigger double trigger on touch devices
+        if (e.clientX !== 0 && e.clientY !== 0) {
+          handleInput(btn.getAttribute("data-value"));
+        }
+      });
+    });
+  </script>
+</body>
+</html>
